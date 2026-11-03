@@ -13,13 +13,13 @@ h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
 
 /* Mode Selector */
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.mode-btn{background:rgba(255,255,255,.05);border:1px solid var(--b);color:var(--m);padding:10px;border-radius:8px;cursor:pointer;font-size:.75rem;transition:.2s;text-align:left}
+.mode-btn{background:rgba(255,255,255,.05);border:1px solid var(--b);color:var(--m);padding:10px;border-radius:8px;cursor:pointer;font-size:.75rem;transition:.2s;text-align:left;display:flex;flex-direction:column;justify-content:center;height:60px}
 .mode-btn:hover{border-color:var(--t);color:var(--w)}
 .mode-btn.active{background:rgba(15,179,166,.1);border-color:var(--t);color:var(--t);font-weight:bold}
-.mode-icon{font-size:1.2rem;margin-right:5px}
+.mode-icon{font-size:1.2rem;margin-bottom:2px}
 
 /* Terminal Look */
-.term-box{background:#000;border:1px solid #333;border-radius:8px;padding:15px;height:250px;overflow-y:auto;text-align:left;font-size:.8rem;line-height:1.4;margin-bottom:15px;position:relative}
+.term-box{background:#000;border:1px solid #333;border-radius:8px;padding:15px;height:200px;overflow-y:auto;text-align:left;font-size:.8rem;line-height:1.4;margin-bottom:15px;position:relative}
 .log-line{margin-bottom:3px;opacity:0;animation:fadeIn .2s forwards}
 @keyframes fadeIn{to{opacity:1}}
 .log-info{color:#aaa}.log-warn{color:#ffa500}.log-ok{color:#0f0}.log-err{color:#f44}.log-sys{color:#00ffff;font-weight:bold}
@@ -45,6 +45,14 @@ h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
 .hidden{display:none!important}
 .loader-small{width:12px;height:12px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Instruction Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;display:none;justify-content:center;align-items:center;backdrop-filter:blur(5px)}
+.modal-overlay.act{display:flex}
+.modal-content{background:#15161c;border:1px solid var(--t);padding:30px;border-radius:15px;text-align:center;max-width:300px;box-shadow:0 0 30px rgba(15,179,166,.2)}
+.modal-icon{font-size:3rem;margin-bottom:10px}
+.modal-text{color:#fff;font-size:1rem;margin-bottom:20px}
+.modal-cancel{background:none;border:1px solid var(--b);color:var(--m);padding:8px 20px;border-radius:8px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -55,20 +63,20 @@ h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
 
     <!-- Mode Selection -->
     <div class="mode-grid">
-        <button class="mode-btn active" onclick="setMode('security')">
-            <span class="mode-icon">🛡</span> Security Audit<br><small>Проверка защиты</small>
+        <button class="mode-btn active" id="btn-security" onclick="selectMode('security')">
+            <span class="mode-icon">🛡</span> Security Audit
         </button>
-        <button class="mode-btn" onclick="setMode('signal')">
-            <span class="mode-icon">⚡</span> Signal Strength<br><small>Стабильность связи</small>
+        <button class="mode-btn" id="btn-signal" onclick="selectMode('signal')">
+            <span class="mode-icon">⚡</span> Signal Strength
         </button>
-        <button class="mode-btn" onclick="setMode('structure')">
-            <span class="mode-icon">📂</span> Data Structure<br><small>Тип чипа и данные</small>
+        <button class="mode-btn" id="btn-structure" onclick="selectMode('structure')">
+            <span class="mode-icon">📂</span> Data Structure
         </button>
-        <button class="mode-btn" onclick="setMode('rewrite')">
-            <span class="mode-icon">✍️</span> Rewrite Potential<br><small>Можно ли писать?</small>
+        <button class="mode-btn" id="btn-rewrite" onclick="selectMode('rewrite')">
+            <span class="mode-icon">✍️</span> Rewrite Potential
         </button>
-        <button class="mode-btn" style="grid-column: span 2;" onclick="setMode('clone')">
-            <span class="mode-icon">🕵️</span> Cloning Risk Assessment<br><small>Вероятность копирования</small>
+        <button class="mode-btn" style="grid-column: span 2;" id="btn-clone" onclick="selectMode('clone')">
+            <span class="mode-icon">🕵️</span> Cloning Risk Assessment
         </button>
     </div>
 
@@ -84,13 +92,22 @@ h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
     </div>
 
     <!-- Start Button -->
-    <button class="btn-start" id="scan-btn" onclick="startScan()">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
+    <button class="btn-start" id="scan-btn" onclick="initiateScan()">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
 
     <!-- Result Card -->
     <div class="verdict-card" id="result-card">
         <div class="v-title" id="v-icon">❓ Результат</div>
         <div class="v-desc" id="v-text">...</div>
         <div style="margin-top:10px;font-size:.7rem;color:var(--m)">UID: <span id="res-uid" style="font-family:monospace;color:#fff">---</span></div>
+    </div>
+</div>
+
+<!-- INSTRUCTION MODAL -->
+<div class="modal-overlay" id="instr-modal">
+    <div class="modal-content">
+        <div class="modal-icon">📱</div>
+        <div class="modal-text">Приложите карту<br>к задней панели телефона</div>
+        <button class="modal-cancel" onclick="cancelScan()">Отмена</button>
     </div>
 </div>
 
@@ -102,12 +119,15 @@ let isScanning = false;
 let startTime = 0;
 let intervalId = null;
 
-// --- UI HELPERS ---
-function setMode(mode) {
+// --- MODE SELECTION LOGIC ---
+function selectMode(mode) {
     if(isScanning) return alert("Дождитесь окончания сканирования!");
     currentMode = mode;
+    
+    // Update UI classes manually to avoid event issues
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    const targetBtn = document.getElementById(`btn-${mode}`);
+    if(targetBtn) targetBtn.classList.add('active');
     
     const term = document.getElementById('terminal');
     term.innerHTML = `<div class="log-line log-sys">MODE SET: ${mode.toUpperCase()}</div>`;
@@ -115,80 +135,130 @@ function setMode(mode) {
     resetUI();
 }
 
-function addLog(text, type = 'info') {
-    const term = document.getElementById('terminal');
-    const div = document.createElement('div');
-    div.className = `log-line log-${type}`;
-    div.innerText = text;
-    term.appendChild(div);
-    term.scrollTop = term.scrollHeight;
-}
-
-function updateProgress(percent) {
-    document.getElementById('pbar').style.width = percent + '%';
-}
-
-function resetUI() {
-    document.getElementById('result-card').style.display = 'none';
-    document.getElementById('scan-btn').disabled = false;
-    document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
-    updateProgress(0);
-}
-
 // --- CORE LOGIC ---
 
-async function startScan() {
+async function initiateScan() {
     if(isScanning) return;
     
     if(!('NDEFReader' in window)) {
-        alert("Web NFC not supported.");
+        alert("Web NFC not supported. Use Chrome on Android.");
         return;
     }
 
-    isScanning = true;
-    resetUI();
+    // Show Instruction Modal First
+    document.getElementById('instr-modal').classList.add('act');
     document.getElementById('scan-btn').disabled = true;
-    document.getElementById('scan-btn').innerHTML = '<span class="loader-small"></span> СКАНИРОВАНИЕ...';
-    
-    const term = document.getElementById('terminal');
-    term.innerHTML = ''; // Clear terminal
-    addLog(`INITIATING ${currentMode.toUpperCase()} PROTOCOL...`, "sys");
-    addLog("Hold tag steady near phone...", "warn");
+    document.getElementById('scan-btn').innerText = "ОЖИДАНИЕ МЕТКИ...";
+}
 
+function cancelScan() {
+    document.getElementById('instr-modal').classList.remove('act');
+    document.getElementById('scan-btn').disabled = false;
+    document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
+    resetUI();
+}
+
+async function startRealScan() {
+    // Hide modal immediately when user sees it? No, we wait for tag detection logic below.
+    // Actually, let's keep modal visible until tag is found or error occurs.
+    
     try {
         reader = new NDEFReader();
         
         reader.addEventListener("reading", async ({ serialNumber, records }) => {
-            await stopScan();
+            // Tag Found! Close modal and start analysis
+            document.getElementById('instr-modal').classList.remove('act');
+            await stopScanner(); // Stop listening
             
-            // Run the specific simulation based on mode
             runSimulation(currentMode, serialNumber, records);
         });
 
         reader.addEventListener("error", (e) => {
-             addLog(`ERROR: ${e.error.name}`, "err");
-             finishWithError("Connection lost.");
+             console.error(e);
+             // Don't close modal yet, maybe retry? Or show error in terminal behind modal?
+             // For simplicity, let's just log it. User can cancel.
         });
 
         await reader.scan();
+        addLog("Scanner Active. Waiting for tag...", "warn");
 
     } catch (err) {
+        document.getElementById('instr-modal').classList.remove('act');
+        document.getElementById('scan-btn').disabled = false;
+        document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
         addLog(`FATAL: ${err.message}`, "err");
-        finishWithError("Module error.");
     }
 }
 
-function stopScan() {
+// Hook up the button click to actually start the scanner after showing modal
+document.getElementById('scan-btn').addEventListener('click', () => {
+    if(document.getElementById('instr-modal').classList.contains('act')) {
+       // Already shown, do nothing extra here, logic is in initiateScan
+    } else {
+       initiateScan();
+    }
+});
+
+// Wait, simpler approach: Click shows modal. We need a way to trigger scan AFTER modal is seen.
+// Let's modify initiateScan to also call startRealScan but handle visibility better.
+
+// RE-WRITING initiateScan for clarity:
+window.initiateScan = async function() {
+     if(isScanning) return;
+     if(!('NDEFReader' in window)) { alert("No NFC"); return; }
+     
+     // Reset UI
+     resetUI();
+     document.getElementById('scan-btn').disabled = true;
+     document.getElementById('scan-btn').innerHTML = '<span class="loader-small"></span> ИНИЦИАЛИЗАЦИЯ...';
+     
+     // Show Modal
+     document.getElementById('instr-modal').classList.add('act');
+     
+     // Start Scanner in background
+     try {
+        reader = new NDEFReader();
+        
+        reader.addEventListener("reading", async ({ serialNumber, records }) => {
+            // Success path
+            document.getElementById('instr-modal').classList.remove('act');
+            await stopScanner();
+            
+            // Update button state during simulation
+            document.getElementById('scan-btn').innerText = "ANALYZING...";
+            
+            runSimulation(currentMode, serialNumber, records);
+        });
+
+        reader.addEventListener("error", (e) => {
+             // Error path - keep modal open so user knows something happened? 
+             // Better: Log error and stay waiting.
+             addLog(`Wait Error: ${e.error.name}`, "err");
+        });
+
+        await reader.scan();
+        addLog("Scanner Ready. Hold tag near phone.", "ok");
+
+    } catch (err) {
+        document.getElementById('instr-modal').classList.remove('act');
+        document.getElementById('scan-btn').disabled = false;
+        document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
+        addLog(`Init Fail: ${err.message}`, "err");
+    }
+}
+
+
+function stopScanner() {
     if(reader) try { await reader.stop(); } catch(e){}
     reader = null;
 }
 
 // The Simulation Engine (Runs for exactly 5 seconds)
 function runSimulation(mode, uid, records) {
-    addLog(`TAG ACQUIRED. UID: ${uid}`, "ok");
+    isScanning = true;
+    addLog(`TAG ACQUIRED. UID: ${uid}`, "sys");
     startTime = Date.now();
     let step = 0;
-    const totalSteps = 10; 
     
     intervalId = setInterval(() => {
         const elapsed = Date.now() - startTime;
@@ -196,7 +266,6 @@ function runSimulation(mode, uid, records) {
         updateProgress(progress);
         step++;
 
-        // Generate fake logs based on mode
         generateLogs(mode, step, uid, records);
 
         if(elapsed >= SCAN_DURATION_MS) {
@@ -218,7 +287,7 @@ function generateLogs(mode, step, uid, records) {
             
         case 'signal':
             const strength = hasData ? "STABLE" : "WEAK/NO DATA";
-            addLog(`Signal Check #${step}: RSSI Level: ${strength} (-${20+Math.random()*10}dBm)`, "info");
+            addLog(`Signal Check #${step}: RSSI Level: ${strength} (-${Math.floor(20+Math.random()*10)}dBm)`, "info");
             break;
             
         case 'structure':
@@ -245,6 +314,7 @@ function generateLogs(mode, step, uid, records) {
 function showFinalVerdict(mode, uid, records) {
     isScanning = false;
     document.getElementById('scan-btn').innerText = "✅ ГОТОВО";
+    document.getElementById('scan-btn').disabled = false;
     
     const resultCard = document.getElementById('result-card');
     const iconEl = document.getElementById('v-icon');
@@ -255,7 +325,6 @@ function showFinalVerdict(mode, uid, records) {
     resultCard.style.display = 'block';
     const hasData = records && records.length > 0;
 
-    // Logic per mode
     if(mode === 'security') {
         if(hasData) {
             iconEl.innerHTML = '⚠️ <span class="tag tag-open">OPEN</span>';
@@ -297,12 +366,21 @@ function showFinalVerdict(mode, uid, records) {
     }
 }
 
-function finishWithError(msg) {
-    isScanning = false;
-    clearInterval(intervalId);
-    document.getElementById('scan-btn').disabled = false;
-    document.getElementById('scan-btn').innerText = "🔄 ПОВТОРИТЬ";
-    addLog(`SCAN FAILED: ${msg}`, "err");
+function addLog(text, type = 'info') {
+    const term = document.getElementById('terminal');
+    const div = document.createElement('div');
+    div.className = `log-line log-${type}`;
+    div.innerText = text;
+    term.appendChild(div);
+    term.scrollTop = term.scrollHeight;
+}
+
+function updateProgress(percent) {
+    document.getElementById('pbar').style.width = percent + '%';
+}
+
+function resetUI() {
+    document.getElementById('result-card').style.display = 'none';
     updateProgress(0);
 }
 

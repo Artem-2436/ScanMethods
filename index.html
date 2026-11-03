@@ -2,109 +2,154 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Xcortex | Universal NFC Analyzer</title>
+<title>Xcortex | NFC Analyzer</title>
 <style>
-:root{--bg:#0a0b10;--s:rgba(255,255,255,.03);--b:rgba(255,255,255,.08);--a:#ff5a2c;--t:#0fb3a6;--w:#fff;--m:#8b9bb4}
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Courier New',monospace,sans-serif}
-body{background:var(--bg);color:var(--w);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
-.cont{max-width:450px;width:100%;text-align:center}
-h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
-.sub{color:var(--m);font-size:.8rem;margin-bottom:20px;text-transform:uppercase;letter-spacing:1px}
+:root{--bg:#0a0b10;--card:#15161c;--border:#2a2d35;--accent:#0fb3a6;--danger:#ff5a2c;--text:#fff;--muted:#8b9bb4}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.container{max-width:450px;width:100%}
 
-/* Mode Selector */
-.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.mode-btn{background:rgba(255,255,255,.05);border:1px solid var(--b);color:var(--m);padding:10px;border-radius:8px;cursor:pointer;font-size:.75rem;transition:.2s;text-align:left;display:flex;flex-direction:column;justify-content:center;height:60px}
-.mode-btn:hover{border-color:var(--t);color:var(--w)}
-.mode-btn.active{background:rgba(15,179,166,.1);border-color:var(--t);color:var(--t);font-weight:bold}
-.mode-icon{font-size:1.2rem;margin-bottom:2px}
+/* Header */
+header{text-align:center;margin-bottom:20px}
+h1{font-size:1.8rem;font-weight:800;letter-spacing:-1px}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:1px;margin-top:5px}
 
-/* Terminal Look */
-.term-box{background:#000;border:1px solid #333;border-radius:8px;padding:15px;height:200px;overflow-y:auto;text-align:left;font-size:.8rem;line-height:1.4;margin-bottom:15px;position:relative}
-.log-line{margin-bottom:3px;opacity:0;animation:fadeIn .2s forwards}
-@keyframes fadeIn{to{opacity:1}}
-.log-info{color:#aaa}.log-warn{color:#ffa500}.log-ok{color:#0f0}.log-err{color:#f44}.log-sys{color:#00ffff;font-weight:bold}
+/* Mode Grid */
+.modes{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:20px}
+.mode-btn{
+    background:var(--card);border:1px solid var(--border);color:var(--muted);
+    padding:12px;border-radius:10px;cursor:pointer;transition:.2s;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    font-size:.85rem;font-weight:600;height:70px;
+}
+.mode-btn:hover{border-color:var(--accent);color:var(--text)}
+.mode-btn.active{
+    background:rgba(15,179,166,.1);border-color:var(--accent);color:var(--accent);
+    box-shadow:0 0 10px rgba(15,179,166,.2);
+}
+.mode-icon{font-size:1.2rem;margin-bottom:4px}
+
+/* Terminal Area */
+.terminal-wrapper{
+    background:#000;border:1px solid var(--border);border-radius:12px;
+    height:250px;overflow-y:auto;padding:15px;margin-bottom:15px;
+    font-family:'Courier New', Courier, monospace;font-size:.85rem;line-height:1.5;
+    scrollbar-width:thin;scrollbar-color:var(--border) #000;
+}
+.log-line{margin-bottom:4px;word-wrap:break-word}
+.log-sys{color:#00ffff;font-weight:bold}
+.log-info{color:#aaa}
+.log-warn{color:#ffa500}
+.log-ok{color:#0f0}
+.log-err{color:#f44}
 
 /* Progress Bar */
-.progress-container{width:100%;height:6px;background:#222;border-radius:3px;margin-bottom:15px;overflow:hidden}
-.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--t));transition:width .1s linear}
+.progress-track{height:6px;background:#222;border-radius:3px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#00c6ff);transition:width .1s linear}
 
-/* Buttons & Status */
-.btn-start{width:100%;padding:15px;background:linear-gradient(135deg,#00c6ff,#0072ff);border:none;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;font-size:1rem;transition:.2s}
-.btn-start:hover{transform:scale(1.02)}
-.btn-start:disabled{background:#333;color:#666;cursor:not-allowed;transform:none}
+/* Main Button */
+.action-btn{
+    width:100%;padding:16px;border:none;border-radius:12px;
+    background:linear-gradient(135deg,#00c6ff,#0072ff);color:#fff;
+    font-size:1.1rem;font-weight:700;cursor:pointer;transition:.2s;
+    text-transform:uppercase;letter-spacing:1px;
+}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,198,255,.3)}
+.action-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none;box-shadow:none}
 
-.verdict-card{display:none;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:12px;padding:15px;margin-top:15px;text-align:left}
-.v-title{font-size:1rem;font-weight:bold;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.v-desc{color:var(--m);font-size:.85rem;line-height:1.4}
-.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:bold;margin-left:5px}
-.tag-safe{background:rgba(15,179,166,.2);color:var(--t)}
-.tag-risk{background:rgba(255,90,44,.2);color:var(--a)}
-.tag-bank{background:rgba(100,100,255,.2);color:#8bf}
-.tag-open{background:rgba(255,255,0,.2);color:#ffeb3b}
+/* Result Card */
+.result-card{
+    margin-top:20px;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:20px;display:none;animation:fadeIn .3s ease-out;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.res-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.res-badge{padding:4px 8px;border-radius:6px;font-size:.75rem;font-weight:bold;text-transform:uppercase}
+.badge-safe{background:rgba(15,179,166,.2);color:var(--accent)}
+.badge-risk{background:rgba(255,90,44,.2);color:var(--danger)}
+.badge-bank{background:rgba(100,100,255,.2);color:#8bf}
+.res-title{font-size:1.1rem;font-weight:700}
+.res-desc{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:10px}
+.res-uid{font-family:monospace;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:10px}
 
-.hidden{display:none!important}
-.loader-small{width:12px;height:12px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--t);border-radius:50%;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle;margin-right:5px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Instruction Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;display:none;justify-content:center;align-items:center;backdrop-filter:blur(5px)}
-.modal-overlay.act{display:flex}
-.modal-content{background:#15161c;border:1px solid var(--t);padding:30px;border-radius:15px;text-align:center;max-width:300px;box-shadow:0 0 30px rgba(15,179,166,.2)}
-.modal-icon{font-size:3rem;margin-bottom:10px}
-.modal-text{color:#fff;font-size:1rem;margin-bottom:20px}
-.modal-cancel{background:none;border:1px solid var(--b);color:var(--m);padding:8px 20px;border-radius:8px;cursor:pointer}
+/* Modal Overlay */
+.modal-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,.9);backdrop-filter:blur(5px);
+    z-index:1000;display:none;justify-content:center;align-items:center;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+    background:var(--card);border:1px solid var(--accent);border-radius:16px;
+    padding:30px;text-align:center;max-width:300px;width:90%;
+    box-shadow:0 0 30px rgba(15,179,166,.2);
+}
+.modal-icon{font-size:3rem;margin-bottom:15px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+.modal-text{font-size:1.1rem;font-weight:600;margin-bottom:20px;color:var(--text)}
+.modal-cancel{
+    background:none;border:1px solid var(--border);color:var(--muted);
+    padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.9rem;
+}
+.modal-cancel:hover{border-color:var(--danger);color:var(--danger)}
 </style>
 </head>
 <body>
 
-<div class="cont">
-    <h1>X<span>cortex</span> ANALYZER</h1>
-    <div class="sub">Multi-Protocol NFC Diagnostic Tool</div>
+<div class="container">
+    <header>
+        <h1>X<span>cortex</span></h1>
+        <div class="subtitle">NFC Security Auditor v2.0</div>
+    </header>
 
-    <!-- Mode Selection -->
-    <div class="mode-grid">
-        <button class="mode-btn active" id="btn-security" onclick="selectMode('security')">
+    <!-- Modes -->
+    <div class="modes">
+        <button class="mode-btn active" id="btn-security" onclick="setMode('security')">
             <span class="mode-icon">🛡</span> Security Audit
         </button>
-        <button class="mode-btn" id="btn-signal" onclick="selectMode('signal')">
-            <span class="mode-icon">⚡</span> Signal Strength
+        <button class="mode-btn" id="btn-signal" onclick="setMode('signal')">
+            <span class="mode-icon">⚡</span> Signal Check
         </button>
-        <button class="mode-btn" id="btn-structure" onclick="selectMode('structure')">
+        <button class="mode-btn" id="btn-structure" onclick="setMode('structure')">
             <span class="mode-icon">📂</span> Data Structure
         </button>
-        <button class="mode-btn" id="btn-rewrite" onclick="selectMode('rewrite')">
-            <span class="mode-icon">✍️</span> Rewrite Potential
+        <button class="mode-btn" id="btn-rewrite" onclick="setMode('rewrite')">
+            <span class="mode-icon">✍️</span> Rewrite Test
         </button>
-        <button class="mode-btn" style="grid-column: span 2;" id="btn-clone" onclick="selectMode('clone')">
-            <span class="mode-icon">🕵️</span> Cloning Risk Assessment
+        <button class="mode-btn" style="grid-column: span 2;" id="btn-clone" onclick="setMode('clone')">
+            <span class="mode-icon">🕵️</span> Cloning Risk
         </button>
     </div>
 
-    <!-- Terminal Output -->
-    <div class="term-box" id="terminal">
-        <div class="log-line log-sys">SYSTEM READY.</div>
-        <div class="log-line log-info">Select mode and press START.</div>
+    <!-- Terminal -->
+    <div class="terminal-wrapper" id="terminal">
+        <div class="log-line log-sys">SYSTEM INITIALIZED.</div>
+        <div class="log-line log-info">Select mode and press START ANALYSIS.</div>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar" id="pbar"></div>
+    <!-- Progress -->
+    <div class="progress-track">
+        <div class="progress-fill" id="pbar"></div>
     </div>
 
-    <!-- Start Button -->
-    <button class="btn-start" id="scan-btn" onclick="initiateScan()">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
+    <!-- Action Button -->
+    <button class="action-btn" id="main-btn" onclick="startProcess()">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
 
-    <!-- Result Card -->
-    <div class="verdict-card" id="result-card">
-        <div class="v-title" id="v-icon">❓ Результат</div>
-        <div class="v-desc" id="v-text">...</div>
-        <div style="margin-top:10px;font-size:.7rem;color:var(--m)">UID: <span id="res-uid" style="font-family:monospace;color:#fff">---</span></div>
+    <!-- Result -->
+    <div class="result-card" id="result-card">
+        <div class="res-header">
+            <span class="res-badge badge-safe" id="res-badge">SAFE</span>
+            <span class="res-title" id="res-title">Analysis Complete</span>
+        </div>
+        <div class="res-desc" id="res-desc">Description goes here...</div>
+        <div class="res-uid">UID: <span id="res-uid-val">---</span></div>
     </div>
 </div>
 
-<!-- INSTRUCTION MODAL -->
-<div class="modal-overlay" id="instr-modal">
-    <div class="modal-content">
+<!-- Scanning Modal -->
+<div class="modal-overlay" id="scan-modal">
+    <div class="modal-box">
         <div class="modal-icon">📱</div>
         <div class="modal-text">Приложите карту<br>к задней панели телефона</div>
         <button class="modal-cancel" onclick="cancelScan()">Отмена</button>
@@ -112,280 +157,280 @@ h1{font-size:1.5rem;margin-bottom:5px;color:var(--a)}
 </div>
 
 <script>
-let reader = null;
-const SCAN_DURATION_MS = 5000; // Fixed 5 seconds
+// State
 let currentMode = 'security';
-let isScanning = false;
-let startTime = 0;
-let intervalId = null;
+let reader = null;
+let isProcessing = false;
+let analysisTimer = null;
 
-// --- MODE SELECTION LOGIC ---
-function selectMode(mode) {
-    if(isScanning) return alert("Дождитесь окончания сканирования!");
-    currentMode = mode;
-    
-    // Update UI classes manually to avoid event issues
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.getElementById(`btn-${mode}`);
-    if(targetBtn) targetBtn.classList.add('active');
-    
-    const term = document.getElementById('terminal');
-    term.innerHTML = `<div class="log-line log-sys">MODE SET: ${mode.toUpperCase()}</div>`;
-    addLog("Ready to scan.", "info");
-    resetUI();
+// DOM Elements
+const termEl = document.getElementById('terminal');
+const pBarEl = document.getElementById('pbar');
+const mainBtn = document.getElementById('main-btn');
+const modalEl = document.getElementById('scan-modal');
+const resultCard = document.getElementById('result-card');
+
+// --- LOGGING HELPER ---
+function log(msg, type='info') {
+    const div = document.createElement('div');
+    div.className = `log-line log-${type}`;
+    div.innerText = msg;
+    termEl.appendChild(div);
+    termEl.scrollTop = termEl.scrollHeight;
 }
 
-// --- CORE LOGIC ---
+function clearLogs() {
+    termEl.innerHTML = '';
+}
 
-async function initiateScan() {
-    if(isScanning) return;
+// --- MODE SELECTION ---
+function setMode(mode) {
+    if(isProcessing) return alert("Wait for scan to finish!");
     
+    currentMode = mode;
+    
+    // Update UI
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${mode}`).classList.add('active');
+    
+    // Reset Results
+    resultCard.style.display = 'none';
+    pBarEl.style.width = '0%';
+    
+    log(`MODE CHANGED: ${mode.toUpperCase()}`, 'sys');
+}
+
+// --- MAIN PROCESS FLOW ---
+
+async function startProcess() {
+    if(isProcessing) return;
+    
+    // 1. Check Support
     if(!('NDEFReader' in window)) {
-        alert("Web NFC not supported. Use Chrome on Android.");
+        alert("Web NFC not supported on this device/browser.");
         return;
     }
 
-    // Show Instruction Modal First
-    document.getElementById('instr-modal').classList.add('act');
-    document.getElementById('scan-btn').disabled = true;
-    document.getElementById('scan-btn').innerText = "ОЖИДАНИЕ МЕТКИ...";
+    // 2. Prepare UI
+    isProcessing = true;
+    resultCard.style.display = 'none';
+    pBarEl.style.width = '0%';
+    clearLogs();
+    log("INITIALIZING SCANNER...", 'sys');
+    
+    // Disable button visually
+    mainBtn.disabled = true;
+    mainBtn.innerText = "SCANNING...";
+
+    // 3. Show Modal
+    modalEl.classList.add('show');
+
+    try {
+        // 4. Start Reading
+        reader = new NDEFReader();
+        
+        // Listen for tag detection
+        reader.addEventListener("reading", async ({ serialNumber, records }) => {
+            // Success! Hide modal immediately
+            modalEl.classList.remove('show');
+            
+            // Stop scanning hardware
+            await stopScanner();
+            
+            // Start the 5-second simulation
+            runSimulation(serialNumber, records);
+        });
+
+        // Handle errors during waiting phase
+        reader.addEventListener("error", (e) => {
+            console.error(e);
+            // Keep modal open, user might move card away briefly
+        });
+
+        await reader.scan();
+        log("WAITING FOR TAG...", 'warn');
+
+    } catch (err) {
+        modalEl.classList.remove('show');
+        resetUI();
+        log(`ERROR: ${err.message}`, 'err');
+        alert("Failed to start scanner: " + err.message);
+    }
 }
 
 function cancelScan() {
-    document.getElementById('instr-modal').classList.remove('act');
-    document.getElementById('scan-btn').disabled = false;
-    document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
-    resetUI();
-}
-
-async function startRealScan() {
-    // Hide modal immediately when user sees it? No, we wait for tag detection logic below.
-    // Actually, let's keep modal visible until tag is found or error occurs.
-    
-    try {
-        reader = new NDEFReader();
-        
-        reader.addEventListener("reading", async ({ serialNumber, records }) => {
-            // Tag Found! Close modal and start analysis
-            document.getElementById('instr-modal').classList.remove('act');
-            await stopScanner(); // Stop listening
-            
-            runSimulation(currentMode, serialNumber, records);
+    if(reader) {
+        stopScanner().then(() => {
+            resetUI();
+            log("SCAN CANCELLED BY USER.", 'err');
         });
-
-        reader.addEventListener("error", (e) => {
-             console.error(e);
-             // Don't close modal yet, maybe retry? Or show error in terminal behind modal?
-             // For simplicity, let's just log it. User can cancel.
-        });
-
-        await reader.scan();
-        addLog("Scanner Active. Waiting for tag...", "warn");
-
-    } catch (err) {
-        document.getElementById('instr-modal').classList.remove('act');
-        document.getElementById('scan-btn').disabled = false;
-        document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
-        addLog(`FATAL: ${err.message}`, "err");
-    }
-}
-
-// Hook up the button click to actually start the scanner after showing modal
-document.getElementById('scan-btn').addEventListener('click', () => {
-    if(document.getElementById('instr-modal').classList.contains('act')) {
-       // Already shown, do nothing extra here, logic is in initiateScan
     } else {
-       initiateScan();
-    }
-});
-
-// Wait, simpler approach: Click shows modal. We need a way to trigger scan AFTER modal is seen.
-// Let's modify initiateScan to also call startRealScan but handle visibility better.
-
-// RE-WRITING initiateScan for clarity:
-window.initiateScan = async function() {
-     if(isScanning) return;
-     if(!('NDEFReader' in window)) { alert("No NFC"); return; }
-     
-     // Reset UI
-     resetUI();
-     document.getElementById('scan-btn').disabled = true;
-     document.getElementById('scan-btn').innerHTML = '<span class="loader-small"></span> ИНИЦИАЛИЗАЦИЯ...';
-     
-     // Show Modal
-     document.getElementById('instr-modal').classList.add('act');
-     
-     // Start Scanner in background
-     try {
-        reader = new NDEFReader();
-        
-        reader.addEventListener("reading", async ({ serialNumber, records }) => {
-            // Success path
-            document.getElementById('instr-modal').classList.remove('act');
-            await stopScanner();
-            
-            // Update button state during simulation
-            document.getElementById('scan-btn').innerText = "ANALYZING...";
-            
-            runSimulation(currentMode, serialNumber, records);
-        });
-
-        reader.addEventListener("error", (e) => {
-             // Error path - keep modal open so user knows something happened? 
-             // Better: Log error and stay waiting.
-             addLog(`Wait Error: ${e.error.name}`, "err");
-        });
-
-        await reader.scan();
-        addLog("Scanner Ready. Hold tag near phone.", "ok");
-
-    } catch (err) {
-        document.getElementById('instr-modal').classList.remove('act');
-        document.getElementById('scan-btn').disabled = false;
-        document.getElementById('scan-btn').innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
-        addLog(`Init Fail: ${err.message}`, "err");
+        resetUI();
     }
 }
 
-
-function stopScanner() {
-    if(reader) try { await reader.stop(); } catch(e){}
-    reader = null;
-}
-
-// The Simulation Engine (Runs for exactly 5 seconds)
-function runSimulation(mode, uid, records) {
-    isScanning = true;
-    addLog(`TAG ACQUIRED. UID: ${uid}`, "sys");
-    startTime = Date.now();
-    let step = 0;
-    
-    intervalId = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min((elapsed / SCAN_DURATION_MS) * 100, 100);
-        updateProgress(progress);
-        step++;
-
-        generateLogs(mode, step, uid, records);
-
-        if(elapsed >= SCAN_DURATION_MS) {
-            clearInterval(intervalId);
-            showFinalVerdict(mode, uid, records);
-        }
-    }, 500); 
-}
-
-function generateLogs(mode, step, uid, records) {
-    const hasData = records && records.length > 0;
-    
-    switch(mode) {
-        case 'security':
-            if(step <= 3) addLog(`Pulse #${step}: Checking encryption status...`, "warn");
-            else if(step <= 7) addLog(`Pulse #${step}: Verifying sector access rights...`, "warn");
-            else addLog(`Pulse #${step}: Analyzing handshake integrity...`, "info");
-            break;
-            
-        case 'signal':
-            const strength = hasData ? "STABLE" : "WEAK/NO DATA";
-            addLog(`Signal Check #${step}: RSSI Level: ${strength} (-${Math.floor(20+Math.random()*10)}dBm)`, "info");
-            break;
-            
-        case 'structure':
-            if(step === 1) addLog(`Parsing Header Bytes...`, "info");
-            if(step === 3) addLog(`Detecting Chip Family: ${hasData ? 'NDEF Compatible' : 'Raw ISO14443'}`, "ok");
-            if(step === 5) addLog(`Mapping Memory Blocks...`, "warn");
-            if(step === 8) addLog(`Extracting Metadata...`, "info");
-            break;
-            
-        case 'rewrite':
-            if(step <= 4) addLog(`Testing Write Permission Sector 0x00...`, "warn");
-            if(step <= 8) addLog(`Simulating Payload Injection...`, "info");
-            else addLog(`Validating CRC Checks...`, "ok");
-            break;
-            
-        case 'clone':
-            if(step <= 2) addLog(`Checking for Static UID Protection...`, "warn");
-            if(step <= 5) addLog(`Analyzing Crypto Keys Exposure...`, "err");
-            if(step <= 8) addLog(`Comparing with Known Clone Signatures...`, "info");
-            break;
+async function stopScanner() {
+    if(reader) {
+        try { await reader.stop(); } catch(e){}
+        reader = null;
     }
-}
-
-function showFinalVerdict(mode, uid, records) {
-    isScanning = false;
-    document.getElementById('scan-btn').innerText = "✅ ГОТОВО";
-    document.getElementById('scan-btn').disabled = false;
-    
-    const resultCard = document.getElementById('result-card');
-    const iconEl = document.getElementById('v-icon');
-    const textEl = document.getElementById('v-text');
-    const uidEl = document.getElementById('res-uid');
-    
-    uidEl.innerText = uid;
-    resultCard.style.display = 'block';
-    const hasData = records && records.length > 0;
-
-    if(mode === 'security') {
-        if(hasData) {
-            iconEl.innerHTML = '⚠️ <span class="tag tag-open">OPEN</span>';
-            textEl.innerHTML = `<strong>Уязвимость найдена.</strong><br>Карта содержит открытые NDEF данные. Любой желающий может прочитать вашу информацию.`;
-        } else {
-            iconEl.innerHTML = '🔒 <span class="tag tag-bank">SECURE</span>';
-            textEl.innerHTML = `<strong>Защищено.</strong><br>Доступ к данным запрещен протоколом безопасности (EMV/MIFARE Classic). Только UID доступен.`;
-        }
-    } 
-    else if(mode === 'signal') {
-        iconEl.innerHTML = '📶 <span class="tag tag-safe">GOOD</span>';
-        textEl.innerHTML = `<strong>Связь установлена.</strong><br>Импульсы успешно достигли чипа. Расстояние оптимальное (< 2см).`;
-    }
-    else if(mode === 'structure') {
-        iconEl.innerHTML = '🏷️ <span class="tag tag-info">INFO</span>';
-        if(hasData) {
-            textEl.innerHTML = `<strong>Тип: Smart Tag (NTAG/Ultralight).</strong><br>Обнаружено ${records.length} записей. Структура памяти доступна для чтения.`;
-        } else {
-            textEl.innerHTML = `<strong>Тип: Access Card / Bank Card.</strong><br>Память сегментирована и защищена. Чтение данных невозможно через Web API.`;
-        }
-    }
-    else if(mode === 'rewrite') {
-        if(hasData) {
-            iconEl.innerHTML = '✍️ <span class="tag tag-risk">WRITABLE</span>';
-            textEl.innerHTML = `<strong>Готова к записи.</strong><br>На этой метке можно безопасно перезаписать данные. Используйте функцию "Writer" для обновления контента.`;
-        } else {
-            iconEl.innerHTML = '🚫 <span class="tag tag-bank">READ ONLY</span>';
-            textEl.innerHTML = `<strong>Только чтение.</strong><br>Попытки записи будут отклонены контроллером карты. Не пытайтесь модифицировать банковские документы.`;
-        }
-    }
-    else if(mode === 'clone') {
-        if(hasData) {
-            iconEl.innerHTML = '☠️ <span class="tag tag-risk">HIGH RISK</span>';
-            textEl.innerHTML = `<strong>Высокий риск клонирования.</strong><br>Данные открыты. Злоумышленник может скопировать содержимое на дешевый дубликат.`;
-        } else {
-            iconEl.innerHTML = '🛡 <span class="tag tag-safe">LOW RISK</span>';
-            textEl.innerHTML = `<strong>Низкий риск.</strong><br>Физический UID уникален и неизменяем. Криптографические ключи скрыты. Клонирование через браузер невозможно.`;
-        }
-    }
-}
-
-function addLog(text, type = 'info') {
-    const term = document.getElementById('terminal');
-    const div = document.createElement('div');
-    div.className = `log-line log-${type}`;
-    div.innerText = text;
-    term.appendChild(div);
-    term.scrollTop = term.scrollHeight;
-}
-
-function updateProgress(percent) {
-    document.getElementById('pbar').style.width = percent + '%';
 }
 
 function resetUI() {
-    document.getElementById('result-card').style.display = 'none';
-    updateProgress(0);
+    isProcessing = false;
+    modalEl.classList.remove('show');
+    mainBtn.disabled = false;
+    mainBtn.innerText = "▶ ЗАПУСТИТЬ АНАЛИЗ";
+    pBarEl.style.width = '0%';
 }
 
-// Init
-resetUI();
+// --- SIMULATION ENGINE (5 Seconds) ---
+
+function runSimulation(uid, records) {
+    log(`TAG DETECTED. UID: ${uid}`, 'ok');
+    log("STARTING DEEP ANALYSIS PROTOCOL...", 'sys');
+    
+    let startTime = Date.now();
+    const duration = 5000; // 5 seconds
+    
+    // Interval every 500ms for logs/progress
+    analysisTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        pBarEl.style.width = `${progress}%`;
+        
+        // Generate fake technical logs based on mode
+        generateFakeLogs(currentMode, uid, records);
+        
+        // Finish condition
+        if(elapsed >= duration) {
+            clearInterval(analysisTimer);
+            finalizeAnalysis(uid, records);
+        }
+    }, 500);
+}
+
+function generateFakeLogs(mode, uid, records) {
+    const hasData = records && records.length > 0;
+    const rand = Math.floor(Math.random() * 100);
+    
+    switch(mode) {
+        case 'security':
+            if(rand % 2 === 0) log(`Checking encryption keys... [Sector 0x${rand.toString(16).toUpperCase()}]`, 'warn');
+            else log(`Verifying access control lists...`, 'info');
+            break;
+        case 'signal':
+            log(`Measuring RSSI signal strength... -${40+Math.floor(Math.random()*20)}dBm`, 'info');
+            break;
+        case 'structure':
+            log(`Parsing NDEF TLV structure...`, 'info');
+            if(hasData) log(`Found ${records.length} record(s). Decoding payload...`, 'ok');
+            else log(`No NDEF data found. Raw ISO14443 stream only.`, 'warn');
+            break;
+        case 'rewrite':
+            log(`Testing write permissions on Block 0...`, 'warn');
+            log(`Simulating CRC calculation...`, 'info');
+            break;
+        case 'clone':
+            log(`Comparing UID entropy with known clones...`, 'info');
+            log(`Checking for static counter protection...`, 'warn');
+            break;
+    }
+}
+
+function finalizeAnalysis(uid, records) {
+    isProcessing = false;
+    mainBtn.disabled = false;
+    mainBtn.innerText = "✅ АНАЛИЗ ЗАВЕРШЕН";
+    
+    const hasData = records && records.length > 0;
+    const badge = document.getElementById('res-badge');
+    const title = document.getElementById('res-title');
+    const desc = document.getElementById('res-desc');
+    const uidVal = document.getElementById('res-uid-val');
+    
+    uidVal.innerText = uid;
+    resultCard.style.display = 'block';
+    
+    // Determine Verdict Logic
+    let verdict = {};
+    
+    if(currentMode === 'security') {
+        if(hasData) {
+            verdict = { 
+                cls: 'badge-risk', txt: 'OPEN', 
+                title: 'Уязвимость обнаружена', 
+                desc: 'Карта содержит открытые данные. Любой пользователь может их прочитать.' 
+            };
+        } else {
+            verdict = { 
+                cls: 'badge-bank', txt: 'SECURE', 
+                title: 'Данные защищены', 
+                desc: 'Чип не отдает данные через веб-API. Доступен только UID. Безопасно для идентификации.' 
+            };
+        }
+    } 
+    else if(currentMode === 'signal') {
+        verdict = { 
+            cls: 'badge-safe', txt: 'STABLE', 
+            title: 'Сигнал стабилен', 
+            desc: 'Расстояние до чипа оптимальное (<2см). Связь установлена успешно.' 
+        };
+    }
+    else if(currentMode === 'structure') {
+        if(hasData) {
+            verdict = { 
+                cls: 'badge-safe', txt: 'SMART TAG', 
+                title: 'Тип: Перезаписываемая метка', 
+                desc: `Обнаружено записей: ${records.length}. Чип поддерживает чтение и запись данных.` 
+            };
+        } else {
+            verdict = { 
+                cls: 'badge-bank', txt: 'ACCESS CARD', 
+                title: 'Тип: Карта доступа / Банка', 
+                desc: 'Структура памяти закрыта. Это банковская карта или проездной билет.' 
+            };
+        }
+    }
+    else if(currentMode === 'rewrite') {
+        if(hasData) {
+            verdict = { 
+                cls: 'badge-risk', txt: 'WRITABLE', 
+                title: 'Готова к записи', 
+                desc: 'На эту метку можно безопасно записать новые данные через ваш сайт Xcortex Writer.' 
+            };
+        } else {
+            verdict = { 
+                cls: 'badge-bank', txt: 'READ ONLY', 
+                title: 'Только чтение', 
+                desc: 'Запись невозможна. Контроллер карты отклонит любые команды изменения данных.' 
+            };
+        }
+    }
+    else if(currentMode === 'clone') {
+        if(hasData) {
+            verdict = { 
+                cls: 'badge-risk', txt: 'HIGH RISK', 
+                title: 'Высокий риск клонирования', 
+                desc: 'Данные открыты. Злоумышленник может скопировать содержимое на дешевый дубликат NTAG.' 
+            };
+        } else {
+            verdict = { 
+                cls: 'badge-safe', txt: 'LOW RISK', 
+                title: 'Низкий риск', 
+                desc: 'Физический UID уникален и защищен криптографией. Клонирование через браузер невозможно.' 
+            };
+        }
+    }
+    
+    // Apply Verdict to UI
+    badge.className = `res-badge ${verdict.cls}`;
+    badge.innerText = verdict.txt;
+    title.innerText = verdict.title;
+    desc.innerText = verdict.desc;
+    
+    log("ANALYSIS COMPLETE.", 'sys');
+}
 </script>
 </body>
 </html>
